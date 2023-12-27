@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<title>Chat</title>
+</head>
+
+<body>
+<h1>Создание User</h1>
+	<form action="" onsubmit="createUser(event)">
+			<input type="text" id="name" autocomplete="off" />
+			<input type="text" id="surname" autocomplete="off" />
+			<button>Push</button>
+	</form>
+	<div class="flex flex-col items-center">
+		<h1>Чат</h1>
+		<form action="" onsubmit="sendMessage(event)">
+			<input class="bg-green-300" type="text" id="messageText" autocomplete="off" />
+			<button>Send</button>
+		</form>
+		<h2>ID: <span id="ws-id"></span></h2>
+		<ul id='messages'> </ul>
+	</div>
+	<script>
+
+		async function createUser(event){
+			event.preventDefault()
+			const name = document.querySelector('#name').value
+			const surname = document.querySelector('#surname').value
+			if (name && surname) {
+				const response = await fetch("/user", {
+					method: "POST",
+					headers: { "Accept": "application/json", "Content-Type": "application/json" },
+					body: JSON.stringify({
+						name: name,
+						surname:surname
+					})
+            	});
+				if (response.ok) {
+					console.log(response)
+				}
+				else{
+					console.log(response);
+				}
+			}
+			else {
+				alert('Заполните поля')
+			}
+		}
+
+	function appendMessage(msg) {
+		let messages = document.getElementById('messages')
+		let message = document.createElement('li')
+		let content = document.createTextNode(msg)
+		message.appendChild(content)
+		messages.appendChild(message)
+	}
+	let client_id = Math.floor(Math.random() * 1000) + 1
+	document.querySelector("#ws-id").textContent = client_id;
+	let ws = new WebSocket(`{{ ws_protocol }}://{{ server_urn }}/ws/${client_id}`);
+	ws.onmessage = function(event) {
+		appendMessage(event.data)
+	};
+
+	function sendMessage(event) {
+		let input = document.getElementById("messageText")
+		ws.send(input.value)
+		input.value = ''
+		event.preventDefault()
+	}
+	</script>
+</body>
+
+</html>
